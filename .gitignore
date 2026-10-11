@@ -1,0 +1,30 @@
+# Build output
+target/
+*.class
+
+# Editor settings
+.vscode/
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+
+# Logs and generated tooling files
+*.log
+.github/modernize/
+
+# Local credentials and configuration
+.env
+.env.*
+!.env.example
+application-local.properties
+application-local.yml
+
+# Local H2 database files
+*.mv.db
+*.trace.db
+
+# Operating system files
+.DS_Store
+Thumbs.db
