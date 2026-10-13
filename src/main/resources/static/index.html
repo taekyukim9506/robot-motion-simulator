@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Support standard text characters and adapt the page to screen width. -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Set the browser tab title and load the homepage styles. -->
+    <title>Robot Motion Simulator</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Keep the homepage content inside one main area. -->
+    <main id="home-screen" class="homepage-container">
+
+        <!-- Introduce the application above the robot selection cards. -->
+        <header class="welcome-banner">
+            <h1>Robot Motion Simulator</h1>
+            <p>Explore robot movements by choosing a simulator below.</p>
+        </header>
+
+        <!-- Group the two robot cards for the desktop and mobile layouts. -->
+        <div class="video-showcase-grid">
+
+            <!-- Show the arm description, preview area and control button. -->
+            <section class="video-card" aria-labelledby="arm-title">
+                <h2 id="arm-title">3D Robotic Arm Control</h2>
+
+                <!-- Reserve space for the arm demonstration video. -->
+                <div class="video-placeholder">
+                    <p>Robot arm preview will be added here.</p>
+                </div>
+
+                <p class="card-description">
+                    Control the arm using roll, pitch, yaw and movement speed.
+                </p>
+
+                <!-- Keep this button disabled until arm navigation is added. -->
+                <button id="launch-arm-btn"
+                        class="button1-btn"
+                        type="button"
+                        disabled>
+                    Launch Arm Control
+                </button>
+            </section>
+
+            <!-- Show the mobile robot description, preview and control button. -->
+            <section class="video-card" aria-labelledby="mobile-title">
+                <h2 id="mobile-title">2D Mobile Robot Navigation</h2>
+
+                <!-- Reserve space for the mobile robot demonstration video. -->
+                <div class="video-placeholder">
+                    <p>Mobile robot preview will be added here.</p>
+                </div>
+
+                <p class="card-description">
+                    Move the robot across a grid using X and Y coordinates.
+                </p>
+
+                <!-- Keep this button disabled until mobile navigation is added. -->
+                <button id="launch-mobile-btn"
+                        class="button1-btn"
+                        type="button"
+                        disabled>
+                    Launch Mobile Control
+                </button>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

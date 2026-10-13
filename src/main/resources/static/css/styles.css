@@ -1,0 +1,131 @@
+/* Include padding and borders within each element's width. */
+* {
+    box-sizing: border-box;
+}
+
+/* Set the page font, text colour and light background. */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    color: #1d3557;
+    background-color: #f1f5f9;
+    line-height: 1.5;
+}
+
+/* Centre the homepage and leave space around its content. */
+.homepage-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+/* Centre the introduction and separate it from the cards below. */
+.welcome-banner {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+/* Make the main heading larger than the card headings. */
+.welcome-banner h1 {
+    margin: 0 0 10px;
+    font-size: 2.2rem;
+}
+
+/* Use a softer text colour for the short introduction. */
+.welcome-banner p {
+    margin: 0;
+    color: #475569;
+    font-size: 1.1rem;
+}
+
+/* Place two equally sized cards beside each other on wider screens. */
+.video-showcase-grid {
+    display: flex;
+    align-items: stretch;
+    gap: 30px;
+}
+
+/* Give each card a white background, rounded corners and inner spacing. */
+.video-card {
+    flex: 1;
+    min-width: 0;
+    padding: 24px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Remove default spacing and set the size of each card heading. */
+.video-card h2 {
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+/* Keep a video-shaped preview area with its message in the centre. */
+.video-placeholder {
+    aspect-ratio: 16 / 9;
+    padding: 16px;
+    background-color: #1e293b;
+    color: #ffffff;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+/* Remove extra paragraph spacing inside the preview area. */
+.video-placeholder p {
+    margin: 0;
+}
+
+/* Let the description fill spare space to align the card buttons. */
+.card-description {
+    flex-grow: 1;
+    margin: 0;
+    color: #475569;
+}
+
+/* Give both control buttons the same size, colour and rounded shape. */
+.button1-btn {
+    width: 100%;
+    padding: 12px 18px;
+    border: none;
+    border-radius: 8px;
+    background-color: #1d3557;
+    color: #ffffff;
+    font: inherit;
+    font-weight: bold;
+}
+
+/* Show that the control buttons are not available at this stage. */
+.button1-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+/* Stack the cards vertically when the screen becomes narrower. */
+@media (max-width: 900px) {
+    .video-showcase-grid {
+        flex-direction: column;
+    }
+}
+
+/* Reduce spacing and heading size on small phone screens. */
+@media (max-width: 480px) {
+    .homepage-container {
+        margin: 24px auto;
+        padding: 0 16px;
+    }
+
+    .welcome-banner h1 {
+        font-size: 1.75rem;
+    }
+
+    .video-card {
+        padding: 18px;
+    }
+}
