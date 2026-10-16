@@ -101,7 +101,7 @@ body {
     font-weight: bold;
 }
 
-/* Show that the control buttons are not available at this stage. */
+/* Fade disabled buttons and show that they cannot be used yet. */
 .button1-btn:disabled {
     opacity: 0.65;
     cursor: not-allowed;
@@ -127,5 +127,204 @@ body {
 
     .video-card {
         padding: 18px;
+    }
+}
+
+/* Keep inactive screens hidden, including elements with display styles. */
+[hidden] {
+    display: none !important;
+}
+
+/* Show that the enabled homepage buttons can be clicked. */
+.button1-btn:not(:disabled) {
+    cursor: pointer;
+}
+
+/* Darken enabled buttons when the pointer moves over them. */
+.button1-btn:not(:disabled):hover,
+.navigation-btn:hover {
+    background-color: #14263e;
+}
+
+/* Mark the selected button when navigating with the keyboard. */
+.button1-btn:focus-visible,
+.navigation-btn:focus-visible {
+    outline: 3px solid #2563eb;
+    outline-offset: 3px;
+}
+
+/* Centre each simulator panel and leave space around its content. */
+.simulator-panel {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+/* Place navigation buttons in a row and allow them to wrap. */
+.panel-navigation {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 30px;
+}
+
+/* Give the navigation buttons rounded corners and clear text. */
+.navigation-btn {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    background-color: #1d3557;
+    color: white;
+    font: inherit;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Leave space between the panel heading and the workspace. */
+.panel-heading {
+    margin-bottom: 24px;
+}
+
+/* Keep the panel title close to its description. */
+.panel-heading h1 {
+    margin: 0 0 10px;
+    font-size: 2rem;
+}
+
+/* Use a softer text colour for the panel description. */
+.panel-heading p {
+    margin: 0;
+    color: #475569;
+}
+
+/* Display a temporary workspace with a white background. */
+.panel-placeholder {
+    min-height: 280px;
+    padding: 24px;
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    background-color: white;
+    text-align: center;
+}
+
+/* Keep the placeholder heading and explanation clearly separated. */
+.panel-placeholder h2 {
+    margin: 0 0 12px;
+}
+
+.panel-placeholder p {
+    margin: 0;
+    color: #475569;
+}
+
+/* Stack navigation buttons and reduce spacing on small screens. */
+@media (max-width: 480px) {
+    .simulator-panel {
+        margin: 24px auto;
+        padding: 0 16px;
+    }
+
+    .panel-navigation {
+        flex-direction: column;
+    }
+
+    .navigation-btn {
+        width: 100%;
+    }
+
+    .panel-heading h1 {
+        font-size: 1.75rem;
+    }
+}
+
+/* Place the homepage login button on the right. */
+.account-navigation {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 24px;
+}
+
+/* Centre each account screen inside a compact white card. */
+.account-panel {
+    width: calc(100% - 32px);
+    max-width: 460px;
+    margin: 40px auto;
+    padding: 28px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+/* Arrange the form fields and submit button vertically. */
+.account-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* Keep each label directly above its input. */
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Make field labels easy to distinguish from entered text. */
+.form-field label {
+    font-weight: bold;
+}
+
+/* Give input fields enough space and keep them inside the card. */
+.form-field input {
+    width: 100%;
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid #94a3b8;
+    border-radius: 6px;
+    background-color: #ffffff;
+    color: #1d3557;
+    font: inherit;
+}
+
+/* Highlight the input or text button selected with the keyboard. */
+.form-field input:focus-visible,
+.text-button:focus-visible {
+    outline: 3px solid #2563eb;
+    outline-offset: 3px;
+}
+
+/* Explain why account submission is currently unavailable. */
+.form-note {
+    margin: 0;
+    color: #475569;
+    font-size: 0.95rem;
+}
+
+/* Place account navigation links below the form. */
+.account-links {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+/* Style navigation buttons as underlined text links. */
+.text-button {
+    padding: 4px;
+    border: none;
+    background: transparent;
+    color: #1d3557;
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* Reduce the account card spacing on small screens. */
+@media (max-width: 480px) {
+    .account-panel {
+        margin: 24px auto;
+        padding: 20px;
     }
 }
