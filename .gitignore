@@ -28,3 +28,8 @@ application-local.yml
 # Operating system files
 .DS_Store
 Thumbs.db
+
+# Exclude downloaded JavaScript packages and generated browser test results.
+node_modules/
+test-results/
+playwright-report/

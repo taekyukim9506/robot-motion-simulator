@@ -1,0 +1,24 @@
+{
+  "name": "robot-motion-simulator",
+  "version": "1.0.0",
+  "description": "A web application for simulating a robotic arm and a mobile robot.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/taekyukim9506/robot-motion-simulator.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/taekyukim9506/robot-motion-simulator/issues"
+  },
+  "homepage": "https://github.com/taekyukim9506/robot-motion-simulator#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.64.1"
+  }
+}
