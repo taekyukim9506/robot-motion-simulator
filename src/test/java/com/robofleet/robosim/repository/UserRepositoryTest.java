@@ -23,7 +23,7 @@ class UserRepositoryTest {
     @Autowired
     private TestEntityManager entityManager;
 
-        // Always return a new account with example data for the tests.
+    // Always return a new account with example data for the tests.
     @NonNull
     private UserAccount createTestAccount() {
         UserAccount account = new UserAccount(
