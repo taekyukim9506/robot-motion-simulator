@@ -184,57 +184,102 @@
         </nav>
     </section>
 
-    <!-- Show the signup form separately from the login screen. -->
+    <!-- Display the registration form and its feedback messages. -->
     <section id="signup-screen" class="account-panel" hidden>
-
-        <!-- Explain which details are needed to create an account. -->
         <header class="panel-heading">
             <h1>Create an Account</h1>
-            <p>Choose your login details and enter your email address.</p>
         </header>
 
-        <!-- Collect account details for the later registration connection. -->
+        <!-- Collect account details before sending them to the backend. -->
         <form id="signup-form" class="account-form">
-
-            <!-- Collect the username that will identify the account. -->
+            <!-- Place the username field at the top of the form. -->
             <div class="form-field">
                 <label for="signup-username">Username</label>
-                <input id="signup-username" name="username" type="text"
-                       autocomplete="username" required>
+                <input
+                    id="signup-username"
+                    name="username"
+                    type="text"
+                    autocomplete="username"
+                    maxlength="50"
+                    required
+                >
             </div>
 
-            <!-- Use an email field so the browser can check its basic format. -->
+            <!-- Collect the email address used for account verification. -->
             <div class="form-field">
                 <label for="signup-email">Email address</label>
-                <input id="signup-email" name="email" type="email"
-                       autocomplete="email" required>
+                <input
+                    id="signup-email"
+                    name="email"
+                    type="email"
+                    autocomplete="email"
+                    maxlength="254"
+                    required
+                >
             </div>
 
-            <!-- Mark this field as a new password for the browser. -->
+            <!-- Explain the password rules directly below the password field. -->
             <div class="form-field">
                 <label for="signup-password">Password</label>
-                <input id="signup-password" name="password" type="password"
-                       autocomplete="new-password" required>
+                <input
+                    id="signup-password"
+                    name="password"
+                    type="password"
+                    autocomplete="new-password"
+                    minlength="8"
+                    aria-describedby="signup-password-help"
+                    required
+                >
+                <p id="signup-password-help" class="form-note">
+                    Use at least 8 characters, including one capital letter
+                    and one special character.
+                </p>
             </div>
 
-            <!-- Keep submission unavailable until registration is connected. -->
-            <button class="button1-btn" type="submit" disabled>
+            <!-- Ask the user to enter the same password again. -->
+            <div class="form-field">
+                <label for="signup-confirm-password">Confirm Password</label>
+                <input
+                    id="signup-confirm-password"
+                    name="confirmPassword"
+                    type="password"
+                    autocomplete="new-password"
+                    minlength="8"
+                    required
+                >
+            </div>
+
+            <!-- Submit the form once all required fields are completed. -->
+            <button class="button1-btn" type="submit">
                 Create Account
             </button>
-            <p class="form-note">
-                Account registration is not available yet.
-            </p>
+
+            <!-- Show registration feedback below the submit button. -->
+            <p
+                id="signup-message"
+                class="form-message"
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+                hidden
+            ></p>
         </form>
 
-        <!-- Return to login or leave the account area. -->
-        <nav class="account-links" aria-label="Signup options">
-            <button class="text-button" type="button"
-                    data-screen="login-screen">
-                Back to Log In
+        <!-- Place links to login and the homepage below the form. -->
+        <nav class="account-links" aria-label="Signup navigation">
+            <button
+                class="text-button"
+                type="button"
+                data-screen="login-screen"
+            >
+                Already have an account? Log In
             </button>
 
-            <button class="text-button" type="button"
-                    data-screen="home-screen">
+            <button
+                class="text-button"
+                type="button"
+                data-screen="home-screen"
+            >
                 Back to Home
             </button>
         </nav>

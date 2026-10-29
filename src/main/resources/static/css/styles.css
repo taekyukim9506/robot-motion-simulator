@@ -328,3 +328,33 @@ body {
         padding: 20px;
     }
 }
+
+/* Place signup feedback below the submit button with clear spacing. */
+.form-message {
+    margin: 0;
+    padding: 12px 14px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+/* Use a green background for successful registration messages. */
+.form-message--success {
+    color: #14532d;
+    background-color: #f0fdf4;
+    border-color: #86efac;
+}
+
+/* Use a red background for validation and connection errors. */
+.form-message--error {
+    color: #991b1b;
+    background-color: #fef2f2;
+    border-color: #fca5a5;
+}
+
+/* Indicate that registration is being processed by the server. */
+#signup-form[aria-busy="true"] button[type="submit"] {
+    cursor: wait;
+}

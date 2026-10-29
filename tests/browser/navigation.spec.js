@@ -158,7 +158,7 @@ test("Account fields have labels and expected input behaviour", async ({ page })
 
     await expect(signup.getByLabel("Password", { exact: true }))
         .toHaveAttribute("type", "password");
-    await expect(signup.locator('[type="submit"]')).toBeDisabled();
+    await expect(signup.locator('[type="submit"]')).toBeEnabled();
 
     await page.locator(
         '#signup-screen [data-screen="login-screen"]'
