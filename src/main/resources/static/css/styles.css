@@ -3,7 +3,7 @@
     box-sizing: border-box;
 }
 
-/* Set the page font, text colour and light background. */
+/* Set the page font, text colour and background. */
 body {
     margin: 0;
     font-family: Arial, sans-serif;
@@ -12,40 +12,46 @@ body {
     line-height: 1.5;
 }
 
-/* Centre the homepage and leave space around its content. */
-.homepage-container {
+/* Keep inactive screens hidden even when they have display styles. */
+[hidden] {
+    display: none !important;
+}
+
+/* Centre the homepage and simulator panels with space at the sides. */
+.homepage-container,
+.simulator-panel {
     max-width: 1200px;
     margin: 40px auto;
     padding: 0 20px;
 }
 
-/* Centre the introduction and separate it from the cards below. */
+/* Centre the introduction above the robot cards. */
 .welcome-banner {
     text-align: center;
     margin-bottom: 40px;
 }
 
-/* Make the main heading larger than the card headings. */
+/* Make the homepage title larger than the card headings. */
 .welcome-banner h1 {
     margin: 0 0 10px;
     font-size: 2.2rem;
 }
 
-/* Use a softer text colour for the short introduction. */
+/* Use softer text for the short introduction. */
 .welcome-banner p {
     margin: 0;
     color: #475569;
     font-size: 1.1rem;
 }
 
-/* Place two equally sized cards beside each other on wider screens. */
+/* Place equal-width robot cards beside each other on desktop screens. */
 .video-showcase-grid {
     display: flex;
     align-items: stretch;
     gap: 30px;
 }
 
-/* Give each card a white background, rounded corners and inner spacing. */
+/* Give each card a white background and rounded corners. */
 .video-card {
     flex: 1;
     min-width: 0;
@@ -58,13 +64,13 @@ body {
     gap: 16px;
 }
 
-/* Remove default spacing and set the size of each card heading. */
+/* Keep card headings compact and clearly visible. */
 .video-card h2 {
     margin: 0;
     font-size: 1.3rem;
 }
 
-/* Keep a video-shaped preview area with its message in the centre. */
+/* Reserve a video-shaped area with its message in the centre. */
 .video-placeholder {
     aspect-ratio: 16 / 9;
     padding: 16px;
@@ -77,19 +83,19 @@ body {
     text-align: center;
 }
 
-/* Remove extra paragraph spacing inside the preview area. */
+/* Remove extra paragraph spacing inside previews. */
 .video-placeholder p {
     margin: 0;
 }
 
-/* Let the description fill spare space to align the card buttons. */
+/* Fill spare card space so the launch buttons stay aligned. */
 .card-description {
     flex-grow: 1;
     margin: 0;
     color: #475569;
 }
 
-/* Give both control buttons the same size, colour and rounded shape. */
+/* Give primary buttons a consistent size and rounded shape. */
 .button1-btn {
     width: 100%;
     padding: 12px 18px;
@@ -101,66 +107,46 @@ body {
     font-weight: bold;
 }
 
-/* Fade disabled buttons and show that they cannot be used yet. */
-.button1-btn:disabled {
-    opacity: 0.65;
-    cursor: not-allowed;
-}
-
-/* Stack the cards vertically when the screen becomes narrower. */
-@media (max-width: 900px) {
-    .video-showcase-grid {
-        flex-direction: column;
-    }
-}
-
-/* Reduce spacing and heading size on small phone screens. */
-@media (max-width: 480px) {
-    .homepage-container {
-        margin: 24px auto;
-        padding: 0 16px;
-    }
-
-    .welcome-banner h1 {
-        font-size: 1.75rem;
-    }
-
-    .video-card {
-        padding: 18px;
-    }
-}
-
-/* Keep inactive screens hidden, including elements with display styles. */
-[hidden] {
-    display: none !important;
-}
-
-/* Show that the enabled homepage buttons can be clicked. */
+/* Show that enabled primary buttons can be clicked. */
 .button1-btn:not(:disabled) {
     cursor: pointer;
 }
 
+/* Give navigation buttons the same colours as primary buttons. */
+.navigation-btn {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    background-color: #1d3557;
+    color: #ffffff;
+    font: inherit;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Fade disabled buttons while an action is unavailable. */
+.button1-btn:disabled,
+.navigation-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
 /* Darken enabled buttons when the pointer moves over them. */
 .button1-btn:not(:disabled):hover,
-.navigation-btn:hover {
+.navigation-btn:not(:disabled):hover {
     background-color: #14263e;
 }
 
-/* Mark the selected button when navigating with the keyboard. */
+/* Mark controls clearly during keyboard navigation. */
 .button1-btn:focus-visible,
-.navigation-btn:focus-visible {
+.navigation-btn:focus-visible,
+.form-field input:focus-visible,
+.text-button:focus-visible {
     outline: 3px solid #2563eb;
     outline-offset: 3px;
 }
 
-/* Centre each simulator panel and leave space around its content. */
-.simulator-panel {
-    max-width: 1200px;
-    margin: 40px auto;
-    padding: 0 20px;
-}
-
-/* Place navigation buttons in a row and allow them to wrap. */
+/* Place simulator navigation above each panel heading. */
 .panel-navigation {
     display: flex;
     flex-wrap: wrap;
@@ -169,83 +155,63 @@ body {
     margin-bottom: 30px;
 }
 
-/* Give the navigation buttons rounded corners and clear text. */
-.navigation-btn {
-    padding: 10px 18px;
-    border: none;
-    border-radius: 8px;
-    background-color: #1d3557;
-    color: white;
-    font: inherit;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-/* Leave space between the panel heading and the workspace. */
+/* Separate panel headings from the content below. */
 .panel-heading {
     margin-bottom: 24px;
 }
 
-/* Keep the panel title close to its description. */
+/* Keep each title close to its description. */
 .panel-heading h1 {
     margin: 0 0 10px;
     font-size: 2rem;
 }
 
-/* Use a softer text colour for the panel description. */
+/* Use softer text for panel descriptions. */
 .panel-heading p {
     margin: 0;
     color: #475569;
 }
 
-/* Display a temporary workspace with a white background. */
+/* Display a temporary white workspace for future robot controls. */
 .panel-placeholder {
     min-height: 280px;
     padding: 24px;
     border: 2px dashed #cbd5e1;
     border-radius: 12px;
-    background-color: white;
+    background-color: #ffffff;
     text-align: center;
 }
 
-/* Keep the placeholder heading and explanation clearly separated. */
+/* Separate the workspace heading from its explanation. */
 .panel-placeholder h2 {
     margin: 0 0 12px;
 }
 
+/* Keep the workspace description compact. */
 .panel-placeholder p {
     margin: 0;
     color: #475569;
 }
 
-/* Stack navigation buttons and reduce spacing on small screens. */
-@media (max-width: 480px) {
-    .simulator-panel {
-        margin: 24px auto;
-        padding: 0 16px;
-    }
-
-    .panel-navigation {
-        flex-direction: column;
-    }
-
-    .navigation-btn {
-        width: 100%;
-    }
-
-    .panel-heading h1 {
-        font-size: 1.75rem;
-    }
-}
-
-/* Place the homepage login button on the right. */
+/* Align account controls on the right and allow wrapping. */
 .account-navigation {
     display: flex;
+    align-items: center;
     justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
     margin-bottom: 24px;
 }
 
-/* Centre each account screen inside a compact white card. */
+/* Allow long usernames to wrap without widening the page. */
+.user-greeting {
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-weight: bold;
+}
+
+/* Centre each account form inside a compact white card. */
 .account-panel {
     width: calc(100% - 32px);
     max-width: 460px;
@@ -256,26 +222,26 @@ body {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
-/* Arrange the form fields and submit button vertically. */
+/* Arrange form fields, buttons and feedback vertically. */
 .account-form {
     display: flex;
     flex-direction: column;
     gap: 18px;
 }
 
-/* Keep each label directly above its input. */
+/* Keep each label directly above its input field. */
 .form-field {
     display: flex;
     flex-direction: column;
     gap: 6px;
 }
 
-/* Make field labels easy to distinguish from entered text. */
+/* Distinguish field labels from entered text. */
 .form-field label {
     font-weight: bold;
 }
 
-/* Give input fields enough space and keep them inside the card. */
+/* Keep input fields comfortably sized inside their account card. */
 .form-field input {
     width: 100%;
     min-width: 0;
@@ -287,21 +253,14 @@ body {
     font: inherit;
 }
 
-/* Highlight the input or text button selected with the keyboard. */
-.form-field input:focus-visible,
-.text-button:focus-visible {
-    outline: 3px solid #2563eb;
-    outline-offset: 3px;
-}
-
-/* Explain why account submission is currently unavailable. */
+/* Display short instructions below fields or unavailable actions. */
 .form-note {
     margin: 0;
     color: #475569;
     font-size: 0.95rem;
 }
 
-/* Place account navigation links below the form. */
+/* Place account navigation links below each form. */
 .account-links {
     display: flex;
     flex-direction: column;
@@ -310,7 +269,7 @@ body {
     margin-top: 24px;
 }
 
-/* Style navigation buttons as underlined text links. */
+/* Style account navigation buttons as underlined text links. */
 .text-button {
     padding: 4px;
     border: none;
@@ -321,15 +280,7 @@ body {
     cursor: pointer;
 }
 
-/* Reduce the account card spacing on small screens. */
-@media (max-width: 480px) {
-    .account-panel {
-        margin: 24px auto;
-        padding: 20px;
-    }
-}
-
-/* Place signup feedback below the submit button with clear spacing. */
+/* Give feedback messages clear spacing and allow long text to wrap. */
 .form-message {
     margin: 0;
     padding: 12px 14px;
@@ -340,21 +291,66 @@ body {
     overflow-wrap: anywhere;
 }
 
-/* Use a green background for successful registration messages. */
+/* Use green for successful registration messages. */
 .form-message--success {
     color: #14532d;
     background-color: #f0fdf4;
     border-color: #86efac;
 }
 
-/* Use a red background for validation and connection errors. */
+/* Use red for validation, session and connection errors. */
 .form-message--error {
     color: #991b1b;
     background-color: #fef2f2;
     border-color: #fca5a5;
 }
 
-/* Indicate that registration is being processed by the server. */
-#signup-form[aria-busy="true"] button[type="submit"] {
+/* Separate account feedback from the homepage introduction. */
+#account-message {
+    margin-bottom: 20px;
+}
+
+/* Show a waiting cursor while a form request is running. */
+#signup-form[aria-busy="true"] button[type="submit"],
+#login-form[aria-busy="true"] button[type="submit"],
+#logout-btn:disabled {
     cursor: wait;
+}
+
+/* Stack robot cards on tablet and phone screens. */
+@media (max-width: 900px) {
+    .video-showcase-grid {
+        flex-direction: column;
+    }
+}
+
+/* Reduce spacing and stack navigation on small phone screens. */
+@media (max-width: 480px) {
+    .homepage-container,
+    .simulator-panel {
+        margin: 24px auto;
+        padding: 0 16px;
+    }
+
+    .welcome-banner h1,
+    .panel-heading h1 {
+        font-size: 1.75rem;
+    }
+
+    .video-card {
+        padding: 18px;
+    }
+
+    .panel-navigation {
+        flex-direction: column;
+    }
+
+    .navigation-btn {
+        width: 100%;
+    }
+
+    .account-panel {
+        margin: 24px auto;
+        padding: 20px;
+    }
 }

@@ -1,197 +1,263 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Support standard text characters and adapt the page to screen width. -->
+    <!-- Support standard characters and different screen widths. -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Set the browser tab title and load the page styles. -->
+    <!-- Set the browser title and load the page styles. -->
     <title>Robot Motion Simulator</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <!-- Keep the homepage content inside one main area. -->
+    <!-- Display the homepage and its two robot choices. -->
     <main id="home-screen" class="homepage-container">
 
-        <!-- Place the account button above the homepage introduction. -->
+        <!-- Place account controls above the homepage introduction. -->
         <nav class="account-navigation" aria-label="Account navigation">
-            <button class="navigation-btn" type="button"
-                    data-screen="login-screen">
+            <p id="user-greeting" class="user-greeting" hidden></p>
+
+            <button
+                id="open-login-btn"
+                class="navigation-btn"
+                type="button"
+                data-screen="login-screen"
+            >
                 Log In
+            </button>
+
+            <button
+                id="logout-btn"
+                class="navigation-btn"
+                type="button"
+                hidden
+            >
+                Log Out
             </button>
         </nav>
 
-        <!-- Introduce the application above the robot selection cards. -->
+        <!-- Show session and logout errors above the introduction. -->
+        <p
+            id="account-message"
+            class="form-message form-message--error"
+            role="status"
+            aria-live="polite"
+            hidden
+        ></p>
+
+        <!-- Introduce the application above the robot cards. -->
         <header class="welcome-banner">
             <h1>Robot Motion Simulator</h1>
             <p>Explore robot movements by choosing a simulator below.</p>
         </header>
 
-        <!-- Group the two robot cards for the desktop and mobile layouts. -->
+        <!-- Arrange the robot cards beside each other on wider screens. -->
         <div class="video-showcase-grid">
 
-            <!-- Show the arm description, preview area and control button. -->
+            <!-- Present the arm preview, description and launch button. -->
             <section class="video-card" aria-labelledby="arm-title">
                 <h2 id="arm-title">3D Robotic Arm Control</h2>
 
-                <!-- Reserve space for the arm demonstration video. -->
+                <!-- Reserve a video-shaped area for the arm demonstration. -->
                 <div class="video-placeholder">
                     <p>Robot arm preview will be added here.</p>
                 </div>
 
-                <!-- Explain which movement settings the arm will support. -->
                 <p class="card-description">
                     Control the arm using roll, pitch, yaw and movement speed.
                 </p>
 
-                <!-- Open the robotic arm panel from the homepage. -->
-                <button id="launch-arm-btn" class="button1-btn" type="button">
+                <button
+                    id="launch-arm-btn"
+                    class="button1-btn"
+                    type="button"
+                >
                     Launch Arm Control
                 </button>
             </section>
 
-            <!-- Show the mobile robot description, preview and control button. -->
+            <!-- Present the mobile robot preview and launch button. -->
             <section class="video-card" aria-labelledby="mobile-title">
                 <h2 id="mobile-title">2D Mobile Robot Navigation</h2>
 
-                <!-- Reserve space for the mobile robot demonstration video. -->
+                <!-- Reserve a video-shaped area for the mobile demonstration. -->
                 <div class="video-placeholder">
                     <p>Mobile robot preview will be added here.</p>
                 </div>
 
-                <!-- Explain how the mobile robot will move across the grid. -->
                 <p class="card-description">
                     Move the robot across a grid using X and Y coordinates.
                 </p>
 
-                <!-- Open the mobile robot control panel from the homepage. -->
-                <button id="launch-mobile-btn" class="button1-btn" type="button">
+                <button
+                    id="launch-mobile-btn"
+                    class="button1-btn"
+                    type="button"
+                >
                     Launch Mobile Control
                 </button>
             </section>
         </div>
     </main>
 
-    <!-- Show the robotic arm panel when the user selects arm control. -->
+    <!-- Display the arm workspace after the user signs in. -->
     <section id="arm-screen" class="simulator-panel" hidden>
 
-        <!-- Place navigation buttons above the arm panel heading. -->
+        <!-- Place navigation above the arm heading. -->
         <nav class="panel-navigation" aria-label="Arm simulator navigation">
-            <button class="navigation-btn" type="button"
-                    data-screen="home-screen">
+            <button
+                class="navigation-btn"
+                type="button"
+                data-screen="home-screen"
+            >
                 Back to Home
             </button>
 
-            <button class="navigation-btn" type="button"
-                    data-screen="mobile-screen">
+            <button
+                class="navigation-btn"
+                type="button"
+                data-screen="mobile-screen"
+            >
                 Switch to Mobile Robot
             </button>
         </nav>
 
-        <!-- Explain the purpose of the robotic arm simulator. -->
+        <!-- Explain the purpose of the arm controls. -->
         <header class="panel-heading">
             <h1>3D Robotic Arm Control</h1>
             <p>Set the arm angles and speed to explore its movement.</p>
         </header>
 
-        <!-- Reserve space for the arm controls and the 3D scene. -->
+        <!-- Reserve space for the future controls and 3D scene. -->
         <div class="panel-placeholder">
             <h2>Arm simulator workspace</h2>
             <p>The movement controls and 3D scene will be added here.</p>
         </div>
     </section>
 
-    <!-- Show the mobile robot panel when the user selects mobile control. -->
+    <!-- Display the mobile workspace after the user signs in. -->
     <section id="mobile-screen" class="simulator-panel" hidden>
 
-        <!-- Place navigation buttons above the mobile panel heading. -->
+        <!-- Place navigation above the mobile robot heading. -->
         <nav class="panel-navigation" aria-label="Mobile simulator navigation">
-            <button class="navigation-btn" type="button"
-                    data-screen="home-screen">
+            <button
+                class="navigation-btn"
+                type="button"
+                data-screen="home-screen"
+            >
                 Back to Home
             </button>
 
-            <button class="navigation-btn" type="button"
-                    data-screen="arm-screen">
+            <button
+                class="navigation-btn"
+                type="button"
+                data-screen="arm-screen"
+            >
                 Switch to Robotic Arm
             </button>
         </nav>
 
-        <!-- Explain the purpose of the mobile robot simulator. -->
+        <!-- Explain the purpose of the mobile robot controls. -->
         <header class="panel-heading">
             <h1>2D Mobile Robot Navigation</h1>
             <p>Set coordinates and speed to move the robot across a grid.</p>
         </header>
 
-        <!-- Reserve space for the mobile controls and the 2D grid. -->
+        <!-- Reserve space for the future controls and navigation grid. -->
         <div class="panel-placeholder">
             <h2>Mobile simulator workspace</h2>
             <p>The movement controls and navigation grid will be added here.</p>
         </div>
     </section>
 
-    <!-- Show the login form when the user opens the account area. -->
+    <!-- Display the login form inside a centred account card. -->
     <section id="login-screen" class="account-panel" hidden>
-
-        <!-- Introduce the login form above its input fields. -->
         <header class="panel-heading">
             <h1>Log In</h1>
             <p>Enter your account details to access the simulator.</p>
         </header>
 
-        <!-- Collect account details for the later login connection. -->
+        <!-- Collect the account identifier and password. -->
         <form id="login-form" class="account-form">
 
-            <!-- Keep the username label above its input field. -->
+            <!-- Accept either a username or an email in this field. -->
             <div class="form-field">
-                <label for="login-username">Username</label>
-                <input id="login-username" name="username" type="text"
-                       autocomplete="username" required>
+                <label for="login-username">Username / Email</label>
+                <input
+                    id="login-username"
+                    name="identifier"
+                    type="text"
+                    autocomplete="username"
+                    maxlength="254"
+                    required
+                >
             </div>
 
-            <!-- Hide the password characters while the user types. -->
+            <!-- Hide the entered password characters. -->
             <div class="form-field">
                 <label for="login-password">Password</label>
-                <input id="login-password" name="password" type="password"
-                       autocomplete="current-password" required>
+                <input
+                    id="login-password"
+                    name="password"
+                    type="password"
+                    autocomplete="current-password"
+                    required
+                >
             </div>
 
-            <!-- Keep submission unavailable until backend login is connected. -->
-            <button class="button1-btn" type="submit" disabled>
+            <!-- Submit login details to the backend through JavaScript. -->
+            <button class="button1-btn" type="submit">
                 Log In
             </button>
-            <p class="form-note">
-                Login is not available yet.
-            </p>
+
+            <!-- Display login errors below the submit button. -->
+            <p
+                id="login-message"
+                class="form-message form-message--error"
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+                hidden
+            ></p>
         </form>
 
-        <!-- Let users open signup, recovery or the homepage. -->
+        <!-- Place links to signup, recovery and home below the form. -->
         <nav class="account-links" aria-label="Login options">
-            <button class="text-button" type="button"
-                    data-screen="signup-screen">
+            <button
+                class="text-button"
+                type="button"
+                data-screen="signup-screen"
+            >
                 Create an account
             </button>
 
-            <button class="text-button" type="button"
-                    data-screen="recovery-screen">
+            <button
+                class="text-button"
+                type="button"
+                data-screen="recovery-screen"
+            >
                 Forgot your password?
             </button>
 
-            <button class="text-button" type="button"
-                    data-screen="home-screen">
+            <button
+                class="text-button"
+                type="button"
+                data-screen="home-screen"
+            >
                 Back to Home
             </button>
         </nav>
     </section>
 
-    <!-- Display the registration form and its feedback messages. -->
+    <!-- Display registration fields and their feedback messages. -->
     <section id="signup-screen" class="account-panel" hidden>
         <header class="panel-heading">
             <h1>Create an Account</h1>
         </header>
 
-        <!-- Collect account details before sending them to the backend. -->
+        <!-- Collect the details needed to create an account. -->
         <form id="signup-form" class="account-form">
+
             <!-- Place the username field at the top of the form. -->
             <div class="form-field">
                 <label for="signup-username">Username</label>
@@ -205,7 +271,7 @@
                 >
             </div>
 
-            <!-- Collect the email address used for account verification. -->
+            <!-- Collect the email address used for verification. -->
             <div class="form-field">
                 <label for="signup-email">Email address</label>
                 <input
@@ -218,7 +284,7 @@
                 >
             </div>
 
-            <!-- Explain the password rules directly below the password field. -->
+            <!-- Explain password requirements below the password field. -->
             <div class="form-field">
                 <label for="signup-password">Password</label>
                 <input
@@ -236,7 +302,7 @@
                 </p>
             </div>
 
-            <!-- Ask the user to enter the same password again. -->
+            <!-- Ask the user to repeat the password to avoid typing errors. -->
             <div class="form-field">
                 <label for="signup-confirm-password">Confirm Password</label>
                 <input
@@ -249,12 +315,12 @@
                 >
             </div>
 
-            <!-- Submit the form once all required fields are completed. -->
+            <!-- Submit the registration details through JavaScript. -->
             <button class="button1-btn" type="submit">
                 Create Account
             </button>
 
-            <!-- Show registration feedback below the submit button. -->
+            <!-- Display registration feedback below the button. -->
             <p
                 id="signup-message"
                 class="form-message"
@@ -265,7 +331,7 @@
             ></p>
         </form>
 
-        <!-- Place links to login and the homepage below the form. -->
+        <!-- Place navigation links below the registration form. -->
         <nav class="account-links" aria-label="Signup navigation">
             <button
                 class="text-button"
@@ -285,49 +351,57 @@
         </nav>
     </section>
 
-    <!-- Show the recovery form when the user cannot remember their password. -->
+    <!-- Keep the recovery screen ready for a later milestone. -->
     <section id="recovery-screen" class="account-panel" hidden>
-
-        <!-- Explain which email address the user should enter. -->
         <header class="panel-heading">
             <h1>Recover Your Account</h1>
             <p>Enter the email address linked to your account.</p>
         </header>
 
-        <!-- Collect the email address for the later recovery connection. -->
+        <!-- Collect an email address for the future recovery connection. -->
         <form id="recovery-form" class="account-form">
-
-            <!-- Keep the email label directly above its input field. -->
             <div class="form-field">
                 <label for="recovery-email">Email address</label>
-                <input id="recovery-email" name="email" type="email"
-                       autocomplete="email" required>
+                <input
+                    id="recovery-email"
+                    name="email"
+                    type="email"
+                    autocomplete="email"
+                    required
+                >
             </div>
 
-            <!-- Keep submission unavailable until account recovery is connected. -->
+            <!-- Keep recovery unavailable until its backend is implemented. -->
             <button class="button1-btn" type="submit" disabled>
                 Send Recovery Email
             </button>
+
             <p class="form-note">
                 Account recovery is not available yet.
             </p>
         </form>
 
-        <!-- Return to login or leave the recovery screen. -->
+        <!-- Allow users to return to login or the homepage. -->
         <nav class="account-links" aria-label="Recovery options">
-            <button class="text-button" type="button"
-                    data-screen="login-screen">
+            <button
+                class="text-button"
+                type="button"
+                data-screen="login-screen"
+            >
                 Back to Log In
             </button>
 
-            <button class="text-button" type="button"
-                    data-screen="home-screen">
+            <button
+                class="text-button"
+                type="button"
+                data-screen="home-screen"
+            >
                 Back to Home
             </button>
         </nav>
     </section>
 
-    <!-- Load the navigation code after all page elements are available. -->
+    <!-- Load JavaScript after all page elements are available. -->
     <script src="js/app.js"></script>
 </body>
 </html>
