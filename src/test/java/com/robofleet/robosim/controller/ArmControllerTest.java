@@ -1,5 +1,6 @@
 package com.robofleet.robosim.controller;
 
+import com.robofleet.robosim.repository.ArmMovementRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.robofleet.robosim.model.UserAccount;
 import com.robofleet.robosim.repository.UserRepository;
@@ -17,6 +18,8 @@ import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import org.junit.jupiter.params.provider.CsvSource;
+import java.util.HashMap;
 
 import java.util.Map;
 import java.util.Objects;
@@ -38,6 +41,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ArmControllerTest {
 
     private static final String PASSWORD = "RobotTest123!";
+
+    // Check that old movements are actually removed from the database.
+    @Autowired
+    private ArmMovementRepository movementRepository;
 
     // Send HTTP requests through Spring without starting a separate server.
     @Autowired
@@ -285,5 +292,164 @@ class ArmControllerTest {
         mockMvc.perform(get("/api/arm/history").session(session))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
+    }
+    
+    // Reject missing or null fields without adding anything to history.
+    @ParameterizedTest
+    @CsvSource({
+            "roll, missing",
+            "roll, null",
+            "pitch, missing",
+            "pitch, null",
+            "yaw, missing",
+            "yaw, null",
+            "speed, missing",
+            "speed, null"
+    })
+    void rejectsMissingOrNullMovementFields(
+            String field,
+            String inputType) throws Exception {
+
+        MockHttpSession session = loginAs("armuser");
+
+        // Start with valid values and change only the field being tested.
+        Map<String, Object> details = new HashMap<>(
+                movement(10.0, 15.0)
+        );
+
+        // A missing field is absent; a null field is present without a value.
+        if (inputType.equals("missing")) {
+            details.remove(field);
+        } else {
+            details.put(field, null);
+        }
+
+        // The backend must explain that the command is invalid.
+        mockMvc.perform(post("/api/arm/move")
+                        .session(session)
+                        .header("X-CSRF-Token", csrfToken(session))
+                        .contentType("application/json")
+                        .content(json(details)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").isNotEmpty());
+
+        // Rejected input must not leave a movement in the database.
+        mockMvc.perform(get("/api/arm/history").session(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    // Accept both angle boundaries and yaw values beyond a full rotation.
+    @ParameterizedTest
+    @CsvSource({
+            "-165.0, -75.0, -720.0",
+            "-165.0, 75.0, 720.0",
+            "165.0, -75.0, -360.5",
+            "165.0, 75.0, 360.5"
+    })
+    void acceptsAngleBoundariesAndUnrestrictedYaw(
+            double roll,
+            double pitch,
+            double yaw) throws Exception {
+
+        MockHttpSession session = loginAs("armuser");
+
+        mockMvc.perform(post("/api/arm/move")
+                        .session(session)
+                        .header("X-CSRF-Token", csrfToken(session))
+                        .contentType("application/json")
+                        .content(json(Map.of(
+                                "roll", roll,
+                                "pitch", pitch,
+                                "yaw", yaw,
+                                "speed", 15.0
+                        ))))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.roll").value(roll))
+                .andExpect(jsonPath("$.pitch").value(pitch))
+                .andExpect(jsonPath("$.yaw").value(yaw));
+    }
+
+    // Reject values just outside each allowed range.
+    @ParameterizedTest
+    @CsvSource({
+            "-165.01, 0.0",
+            "165.01, 0.0",
+            "0.0, -75.01",
+            "0.0, 75.01"
+    })
+    void rejectsAnglesOutsideAllowedRanges(
+            double roll,
+            double pitch) throws Exception {
+
+        MockHttpSession session = loginAs("armuser");
+
+        mockMvc.perform(post("/api/arm/move")
+                        .session(session)
+                        .header("X-CSRF-Token", csrfToken(session))
+                        .contentType("application/json")
+                        .content(json(Map.of(
+                                "roll", roll,
+                                "pitch", pitch,
+                                "yaw", 0.0,
+                                "speed", 15.0
+                        ))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").isNotEmpty());
+
+        // Invalid angles must not create a history entry.
+        mockMvc.perform(get("/api/arm/history").session(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    // Keep the latest 50 commands without deleting another user's movements.
+    @Test
+    void keepsOnlyLatestFiftyMovementsPerUser() throws Exception {
+        MockHttpSession firstSession = loginAs("armuser");
+        MockHttpSession secondSession = loginAs("otheruser");
+
+        // Save another user's command first to check ownership during cleanup.
+        saveMovement(secondSession, -10.0);
+
+        // Use different roll values to identify the order of saved commands.
+        for (int number = 1; number <= 50; number++) {
+            saveMovement(firstSession, number);
+        }
+
+        mockMvc.perform(get("/api/arm/history").session(firstSession))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(50))
+                .andExpect(jsonPath("$[0].roll").value(1.0))
+                .andExpect(jsonPath("$[49].roll").value(50.0));
+
+        // Command 51 should remove command 1 from this user's history.
+        saveMovement(firstSession, 51.0);
+
+        mockMvc.perform(get("/api/arm/history").session(firstSession))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(50))
+                .andExpect(jsonPath("$[0].roll").value(2.0))
+                .andExpect(jsonPath("$[49].roll").value(51.0));
+
+        // Check that cleanup continues to work on the next command.
+        saveMovement(firstSession, 52.0);
+
+        mockMvc.perform(get("/api/arm/history").session(firstSession))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(50))
+                .andExpect(jsonPath("$[0].roll").value(3.0))
+                .andExpect(jsonPath("$[49].roll").value(52.0));
+
+        mockMvc.perform(get("/api/arm/history").session(secondSession))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].roll").value(-10.0));
+
+        // The database must contain 50 commands for one user and 1 for the other.
+        org.junit.jupiter.api.Assertions.assertEquals(
+                51L,
+                movementRepository.count()
+        );
     }
 }
