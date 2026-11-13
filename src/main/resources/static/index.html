@@ -128,10 +128,128 @@
             <p>Set the arm angles and speed to explore its movement.</p>
         </header>
 
-        <!-- Reserve space for the future controls and 3D scene. -->
-        <div class="panel-placeholder">
-            <h2>Arm simulator workspace</h2>
-            <p>The movement controls and 3D scene will be added here.</p>
+        <!-- Place movement controls beside the future 3D scene. -->
+        <div class="arm-workspace">
+
+            <!-- Collect movement values without reloading the page. -->
+            <form id="arm-form" class="arm-controls" novalidate>
+                <h2>Movement controls</h2>
+
+                <!-- Limit roll to the range accepted by the backend. -->
+                <div class="form-field">
+                    <label for="arm-roll">Roll (degrees)</label>
+                    <input
+                        id="arm-roll"
+                        name="roll"
+                        type="number"
+                        min="-165"
+                        max="165"
+                        step="any"
+                        value="0"
+                        required
+                    >
+                </div>
+
+                <!-- Limit pitch while allowing decimal values. -->
+                <div class="form-field">
+                    <label for="arm-pitch">Pitch (degrees)</label>
+                    <input
+                        id="arm-pitch"
+                        name="pitch"
+                        type="number"
+                        min="-75"
+                        max="75"
+                        step="any"
+                        value="0"
+                        required
+                    >
+                </div>
+
+                <!-- Allow yaw values beyond a full rotation in either direction. -->
+                <div class="form-field">
+                    <label for="arm-yaw">Yaw (degrees)</label>
+                    <input
+                        id="arm-yaw"
+                        name="yaw"
+                        type="number"
+                        step="any"
+                        value="0"
+                        aria-describedby="arm-yaw-help"
+                        required
+                    >
+                    <p id="arm-yaw-help" class="form-note">
+                        Yaw has no angle limit. Negative values are allowed.
+                    </p>
+                </div>
+
+                <!-- Check positive speed in JavaScript and on the backend. -->
+                <div class="form-field">
+                    <label for="arm-speed">Speed (degrees/second)</label>
+                    <input
+                        id="arm-speed"
+                        name="speed"
+                        type="number"
+                        step="any"
+                        value="15"
+                        aria-describedby="arm-speed-help"
+                        required
+                    >
+                    <p id="arm-speed-help" class="form-note">
+                        Enter a speed greater than zero.
+                    </p>
+                </div>
+
+                <!-- Submit one command at a time to prevent repeated requests. -->
+                <button class="button1-btn" type="submit">
+                    Move Arm
+                </button>
+
+                <!-- Announce accepted commands and errors below the button. -->
+                <p
+                    id="arm-message"
+                    class="form-message"
+                    role="status"
+                    aria-live="polite"
+                    aria-atomic="true"
+                    hidden
+                ></p>
+            </form>
+
+            <!-- Display the 3D arm beside the movement controls. -->
+            <div class="arm-scene-card">
+                <h2>Arm view</h2>
+
+                <!-- JavaScript adds the 3D canvas inside this container. -->
+                <div
+                    id="arm-scene"
+                    class="arm-scene"
+                    role="img"
+                    aria-label="3D robotic arm with a ground grid and X, Y and Z axes"
+                    aria-describedby="arm-pose"
+                ></div>
+
+                <!-- Explain loading problems without changing movement feedback. -->
+                <p
+                    id="arm-scene-message"
+                    class="form-note"
+                    role="status"
+                    hidden
+                ></p>
+
+                <!-- Provide a text version of the pose shown in the scene. -->
+                <p id="arm-pose" class="arm-pose" aria-live="polite">
+                    Roll: <span id="arm-current-roll">0</span>° ·
+                    Pitch: <span id="arm-current-pitch">0</span>° ·
+                    Yaw: <span id="arm-current-yaw">0</span>°
+                </p>
+
+                <!-- Explain how this milestone handles accepted movements. -->
+                <p class="form-note">
+                    The view updates after the server accepts a command.
+                    Smooth movement will be added in the next milestone.
+                    Your latest 50 movements are kept.
+                </p>
+            </div>
         </div>
     </section>
 

@@ -14,6 +14,11 @@ const screens = [
 let currentAccount = null;
 let sessionReady = false;
 
+// Keep one scene and the latest accepted pose for the current account.
+let armScene = null;
+let armSceneLoading = null;
+let currentArmPose = { roll: 0, pitch: 0, yaw: 0 };
+
 const protectedScreens = new Set([
     "arm-screen",
     "mobile-screen"
@@ -38,6 +43,11 @@ function showScreen(screenId) {
     screens.forEach((screen) => {
         screen.hidden = screen !== selectedScreen;
     });
+
+    // Create or resize the 3D view after the arm screen becomes visible.
+    if (targetId === "arm-screen") {
+        void showArmScene();
+    }
 
     // Move keyboard focus to the heading of the selected screen.
     const heading = selectedScreen.querySelector("h1");
@@ -247,6 +257,11 @@ function clearAccountFeedback(element) {
 // Update the greeting and available buttons from the current account.
 function updateAccountControls() {
     const signedIn = currentAccount !== null;
+
+    // Clear the previous account's displayed pose when signed out.
+    if (!signedIn) {
+        updateArmPose({ roll: 0, pitch: 0, yaw: 0 });
+    }
 
     userGreeting.hidden = !signedIn;
     logoutButton.hidden = !signedIn;
@@ -459,3 +474,272 @@ logoutButton.addEventListener("click", handleLogout);
 
 // Share the initial session check with login and robot navigation.
 const sessionStartup = restoreLoginSession();
+
+// Store the arm form and its feedback elements.
+const armForm = document.getElementById("arm-form");
+const armMessage = document.getElementById("arm-message");
+const armSubmitButton = armForm.querySelector('button[type="submit"]');
+
+const armInputs = {
+    roll: document.getElementById("arm-roll"),
+    pitch: document.getElementById("arm-pitch"),
+    yaw: document.getElementById("arm-yaw"),
+    speed: document.getElementById("arm-speed")
+};
+
+let armRequestInProgress = false;
+
+// Display movement feedback as plain text.
+function showArmMessage(message, isSuccess = false) {
+    armMessage.textContent = message;
+    armMessage.classList.remove(
+        "form-message--success",
+        "form-message--error"
+    );
+
+    armMessage.classList.add(
+        isSuccess ? "form-message--success" : "form-message--error"
+    );
+
+    armMessage.hidden = false;
+}
+
+// Remove feedback from the previous movement attempt.
+function clearArmMessage() {
+    armMessage.textContent = "";
+    armMessage.hidden = true;
+    armMessage.classList.remove(
+        "form-message--success",
+        "form-message--error"
+    );
+}
+
+// Prevent changes and repeated submissions while saving a command.
+function setArmBusy(isBusy) {
+    armRequestInProgress = isBusy;
+    armSubmitButton.disabled = isBusy;
+    armSubmitButton.textContent = isBusy ? "Sending..." : "Move Arm";
+    armForm.setAttribute("aria-busy", String(isBusy));
+
+    Object.values(armInputs).forEach((input) => {
+        input.disabled = isBusy;
+    });
+}
+
+// Read numeric values and apply the same limits as the backend.
+function readArmCommand() {
+    const command = {};
+
+    for (const [field, input] of Object.entries(armInputs)) {
+        const value = input.valueAsNumber;
+
+        // Empty fields and invalid numeric input must not become zero.
+        if (input.value.trim() === "" || !Number.isFinite(value)) {
+            showArmMessage(`Enter a finite number for ${field}.`);
+            input.focus();
+            return null;
+        }
+
+        command[field] = value;
+    }
+
+    if (command.roll < -165 || command.roll > 165) {
+        showArmMessage("Roll must be between -165 and 165 degrees.");
+        armInputs.roll.focus();
+        return null;
+    }
+
+    if (command.pitch < -75 || command.pitch > 75) {
+        showArmMessage("Pitch must be between -75 and 75 degrees.");
+        armInputs.pitch.focus();
+        return null;
+    }
+
+    if (command.speed <= 0) {
+        showArmMessage("Speed must be greater than zero.");
+        armInputs.speed.focus();
+        return null;
+    }
+
+    return command;
+}
+
+// Check the saved command before using its values in the simulator.
+function isArmMovementResponse(result) {
+    return result !== null &&
+        typeof result === "object" &&
+        Number.isInteger(result.id) &&
+        result.id > 0 &&
+        ["roll", "pitch", "yaw", "speed"].every(
+            (field) => Number.isFinite(result[field])
+        ) &&
+        result.roll >= -165 &&
+        result.roll <= 165 &&
+        result.pitch >= -75 &&
+        result.pitch <= 75 &&
+        result.speed > 0;
+}
+
+// Remove protected access when the backend reports an expired session.
+function handleArmSessionExpired() {
+    currentAccount = null;
+    updateAccountControls();
+    loginForm.reset();
+    clearAccountFeedback(accountMessage);
+    armForm.reset();
+    clearArmMessage();
+
+    showScreen("login-screen");
+    showAccountFeedback(
+        loginMessage,
+        "Your session has expired. Please log in again."
+    );
+}
+
+// Validate and submit a movement using the current account's session token.
+async function handleArmSubmit(event) {
+    event.preventDefault();
+
+    if (armRequestInProgress) {
+        return;
+    }
+
+    clearArmMessage();
+
+    const command = readArmCommand();
+
+    if (!command) {
+        return;
+    }
+
+    setArmBusy(true);
+
+    try {
+        await sessionStartup;
+
+        if (!currentAccount) {
+            handleArmSessionExpired();
+            return;
+        }
+
+        // Remember which account started the request.
+        const requestingAccount = currentAccount;
+
+        const response = await fetch("/api/arm/move", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-Token": requestingAccount.csrfToken
+            },
+            body: JSON.stringify(command)
+        });
+
+        const result = await response.json().catch(() => null);
+
+        // Ignore old responses if the user logged out or changed accounts.
+        if (currentAccount !== requestingAccount) {
+            return;
+        }
+
+        if (response.status === 401) {
+            handleArmSessionExpired();
+            return;
+        }
+
+        if (!response.ok) {
+            showArmMessage(
+                accountResponseMessage(
+                    result,
+                    "Movement request failed. Please try again."
+                )
+            );
+            return;
+        }
+
+        if (!isArmMovementResponse(result)) {
+            showArmMessage(
+                "The server returned an unexpected movement response. " +
+                "The command may have been saved. Refresh before trying again."
+            );
+            return;
+        }
+
+        // Display the values returned by the server after saving succeeds.
+        updateArmPose(result);
+        showArmMessage("Movement accepted.", true);
+    } catch (error) {
+        showArmMessage(
+            "Unable to connect to the server. Please try again."
+        );
+    } finally {
+        setArmBusy(false);
+    }
+}
+
+// Handle movement submissions without refreshing the page.
+armForm.addEventListener("submit", handleArmSubmit);
+
+// Load the scene only when the user opens the arm screen.
+async function showArmScene() {
+    const message = document.getElementById("arm-scene-message");
+
+    try {
+        if (!armSceneLoading) {
+            message.textContent = "Loading the 3D view...";
+            message.hidden = false;
+
+            armSceneLoading = import("./arm-scene.js").then((module) => {
+                armScene = module.createArmScene(
+                    document.getElementById("arm-scene")
+                );
+
+                return armScene;
+            });
+        }
+
+        const view = await armSceneLoading;
+
+        // Use the latest pose even if it changed while loading.
+        view.setPose(currentArmPose);
+        message.hidden = true;
+    } catch (error) {
+        // Allow another loading attempt when the screen is opened again.
+        armSceneLoading = null;
+        message.textContent =
+            "The 3D view could not load. Check the browser console for details.";
+        message.hidden = false;
+        console.error("Unable to load the arm scene:", error);
+    }
+}
+
+// Keep the text description and the 3D model on the same accepted pose.
+function updateArmPose(movement) {
+    currentArmPose = {
+        roll: movement.roll,
+        pitch: movement.pitch,
+        yaw: movement.yaw
+    };
+
+    document.getElementById("arm-current-roll").textContent =
+        String(currentArmPose.roll);
+    document.getElementById("arm-current-pitch").textContent =
+        String(currentArmPose.pitch);
+    document.getElementById("arm-current-yaw").textContent =
+        String(currentArmPose.yaw);
+
+    if (!armScene) {
+        return;
+    }
+
+    try {
+        armScene.setPose(currentArmPose);
+    } catch (error) {
+        // A display problem must not be reported as a failed save.
+        const message = document.getElementById("arm-scene-message");
+        message.textContent =
+            "The pose text has updated, but the 3D view could not refresh.";
+        message.hidden = false;
+        console.error("Unable to render the accepted arm pose:", error);
+    }
+}

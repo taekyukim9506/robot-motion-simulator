@@ -20,5 +20,8 @@
   "homepage": "https://github.com/taekyukim9506/robot-motion-simulator#readme",
   "devDependencies": {
     "@playwright/test": "^1.64.1"
+  },
+  "dependencies": {
+    "three": "0.160.1"
   }
 }
