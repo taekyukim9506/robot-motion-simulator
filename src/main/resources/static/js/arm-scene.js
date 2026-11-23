@@ -1,4 +1,5 @@
 import * as THREE from "./vendor/three/three.module.js";
+import { OrbitControls } from "./vendor/three/OrbitControls.js";
 
 // Create one 3D view and return the functions used by app.js.
 export function createArmScene(container) {
@@ -15,6 +16,21 @@ export function createArmScene(container) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     container.replaceChildren(renderer.domElement);
+
+    // Remember the last canvas size to avoid resizing on every frame.
+    let lastWidth = 0;
+    let lastHeight = 0;
+
+    // Allow the user to rotate, zoom and pan around the arm.
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 1.8, 0);
+    controls.minDistance = 2;
+    controls.maxDistance = 25;
+    controls.update();
+
+    // Save the starting camera position for the Reset view button.
+    controls.saveState();
+    controls.addEventListener("change", render);
 
     // Light the arm from several directions so its shape is clear.
     const ambientLight = new THREE.HemisphereLight(
@@ -139,18 +155,26 @@ export function createArmScene(container) {
     // Add an orange marker so opposite gripper positions look different.
     addBox(rollGroup, 0.15, 0.12, 0.2, orangeMaterial, 0.29, 0.82, 0);
 
-    // Match the canvas to its container whenever the layout changes.
+    // Draw the scene and adjust the camera when the card changes size.
     function render() {
         const width = container.clientWidth;
         const height = container.clientHeight;
 
+        // A hidden arm panel has no visible area to draw.
         if (width === 0 || height === 0) {
             return;
         }
 
-        renderer.setSize(width, height, false);
-        camera.aspect = width / height;
-        camera.updateProjectionMatrix();
+        // Update the canvas size only when the layout has changed.
+        if (width !== lastWidth || height !== lastHeight) {
+            renderer.setSize(width, height, false);
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+
+            lastWidth = width;
+            lastHeight = height;
+        }
+
         renderer.render(scene, camera);
     }
 
@@ -159,7 +183,7 @@ export function createArmScene(container) {
         return THREE.MathUtils.degToRad(degrees % 360);
     }
 
-    // Apply the accepted pose immediately without animation.
+    // Draw the arm at its current position during the movement.
     function setPose(pose) {
         yawGroup.rotation.y = toRadians(pose.yaw);
         pitchGroup.rotation.z = toRadians(pose.pitch);
@@ -172,5 +196,10 @@ export function createArmScene(container) {
     resizeObserver.observe(container);
     render();
 
-    return { setPose, render };
+    // Restore the camera position saved when the scene first opened.
+    function resetView() {
+        controls.reset();
+    }
+
+    return { setPose, render, resetView };
 }

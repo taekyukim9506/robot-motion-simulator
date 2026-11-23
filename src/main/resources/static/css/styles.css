@@ -393,19 +393,6 @@ body {
     gap: 16px;
 }
 
-/* Reserve a visible area for the upcoming 3D canvas. */
-.arm-scene-placeholder {
-    min-height: 360px;
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #eef2f6;
-    border: 1px solid #d4dce6;
-    border-radius: 8px;
-    text-align: center;
-}
-
 /* Indicate that the current movement request is still running. */
 .arm-controls[aria-busy="true"] button {
     cursor: wait;
@@ -423,10 +410,6 @@ body {
     .arm-controls,
     .arm-scene-card {
         padding: 18px;
-    }
-
-    .arm-scene-placeholder {
-        min-height: 260px;
     }
 }
 
@@ -459,4 +442,22 @@ body {
     .arm-scene {
         height: 280px;
     }
+}
+
+/* Keep the timer aligned as the displayed numbers change. */
+.arm-time {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Place the controls in one row and let them wrap on smaller screens. */
+.arm-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+/* Let each button use the width needed for its label. */
+.arm-actions button {
+    width: auto;
 }

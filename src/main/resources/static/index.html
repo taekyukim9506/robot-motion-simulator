@@ -58,7 +58,7 @@
             <section class="video-card" aria-labelledby="arm-title">
                 <h2 id="arm-title">3D Robotic Arm Control</h2>
 
-                <!-- Reserve a video-shaped area for the arm demonstration. -->
+                <!-- Reserve space for the arm demonstration video. -->
                 <div class="video-placeholder">
                     <p>Robot arm preview will be added here.</p>
                 </div>
@@ -80,7 +80,7 @@
             <section class="video-card" aria-labelledby="mobile-title">
                 <h2 id="mobile-title">2D Mobile Robot Navigation</h2>
 
-                <!-- Reserve a video-shaped area for the mobile demonstration. -->
+                <!-- Reserve space for the mobile robot demonstration video. -->
                 <div class="video-placeholder">
                     <p>Mobile robot preview will be added here.</p>
                 </div>
@@ -128,7 +128,7 @@
             <p>Set the arm angles and speed to explore its movement.</p>
         </header>
 
-        <!-- Place movement controls beside the future 3D scene. -->
+        <!-- Place the movement form beside the 3D scene on wider screens. -->
         <div class="arm-workspace">
 
             <!-- Collect movement values without reloading the page. -->
@@ -165,7 +165,7 @@
                     >
                 </div>
 
-                <!-- Allow yaw values beyond a full rotation in either direction. -->
+                <!-- Allow yaw to pass a full rotation in either direction. -->
                 <div class="form-field">
                     <label for="arm-yaw">Yaw (degrees)</label>
                     <input
@@ -182,7 +182,7 @@
                     </p>
                 </div>
 
-                <!-- Check positive speed in JavaScript and on the backend. -->
+                <!-- JavaScript and the backend check that speed is positive. -->
                 <div class="form-field">
                     <label for="arm-speed">Speed (degrees/second)</label>
                     <input
@@ -199,12 +199,12 @@
                     </p>
                 </div>
 
-                <!-- Submit one command at a time to prevent repeated requests. -->
+                <!-- Send the command to the backend before movement starts. -->
                 <button class="button1-btn" type="submit">
                     Move Arm
                 </button>
 
-                <!-- Announce accepted commands and errors below the button. -->
+                <!-- Show accepted commands and errors below the button. -->
                 <p
                     id="arm-message"
                     class="form-message"
@@ -219,7 +219,7 @@
             <div class="arm-scene-card">
                 <h2>Arm view</h2>
 
-                <!-- JavaScript adds the 3D canvas inside this container. -->
+                <!-- JavaScript places the 3D canvas inside this container. -->
                 <div
                     id="arm-scene"
                     class="arm-scene"
@@ -228,7 +228,7 @@
                     aria-describedby="arm-pose"
                 ></div>
 
-                <!-- Explain loading problems without changing movement feedback. -->
+                <!-- Show loading problems in the scene card. -->
                 <p
                     id="arm-scene-message"
                     class="form-note"
@@ -236,18 +236,53 @@
                     hidden
                 ></p>
 
-                <!-- Provide a text version of the pose shown in the scene. -->
-                <p id="arm-pose" class="arm-pose" aria-live="polite">
+                <!-- Show the current angles as the arm moves. -->
+                <p id="arm-pose" class="arm-pose">
                     Roll: <span id="arm-current-roll">0</span>° ·
                     Pitch: <span id="arm-current-pitch">0</span>° ·
                     Yaw: <span id="arm-current-yaw">0</span>°
                 </p>
 
-                <!-- Explain how this milestone handles accepted movements. -->
+                <!-- Show elapsed and total movement time in seconds. -->
+                <p class="arm-time">
+                    Time: <span id="arm-elapsed">0.0</span> /
+                    <span id="arm-total">0.0</span> s
+                </p>
+
+                <!-- Place the movement and camera controls below the timer. -->
+                <div class="arm-actions">
+                    <button
+                        id="arm-pause"
+                        class="button1-btn"
+                        type="button"
+                        disabled
+                    >
+                        Pause
+                    </button>
+
+                    <button
+                        id="arm-reset"
+                        class="button1-btn"
+                        type="button"
+                    >
+                        Reset arm
+                    </button>
+
+                    <button
+                        id="arm-view-reset"
+                        class="button1-btn"
+                        type="button"
+                        disabled
+                    >
+                        Reset view
+                    </button>
+                </div>
+
+                <!-- Explain the camera controls for a mouse or touchscreen. -->
                 <p class="form-note">
-                    The view updates after the server accepts a command.
-                    Smooth movement will be added in the next milestone.
-                    Your latest 50 movements are kept.
+                    Drag to rotate, scroll to zoom, or right-drag to pan.
+                    On a touchscreen, use one finger to rotate or two fingers
+                    to zoom and pan.
                 </p>
             </div>
         </div>
@@ -281,7 +316,7 @@
             <p>Set coordinates and speed to move the robot across a grid.</p>
         </header>
 
-        <!-- Reserve space for the future controls and navigation grid. -->
+        <!-- Reserve space for the mobile controls and navigation grid. -->
         <div class="panel-placeholder">
             <h2>Mobile simulator workspace</h2>
             <p>The movement controls and navigation grid will be added here.</p>
@@ -298,7 +333,7 @@
         <!-- Collect the account identifier and password. -->
         <form id="login-form" class="account-form">
 
-            <!-- Accept either a username or an email in this field. -->
+            <!-- Accept either a username or an email address. -->
             <div class="form-field">
                 <label for="login-username">Username / Email</label>
                 <input
@@ -311,7 +346,7 @@
                 >
             </div>
 
-            <!-- Hide the entered password characters. -->
+            <!-- Hide the password characters as the user types. -->
             <div class="form-field">
                 <label for="login-password">Password</label>
                 <input
@@ -323,7 +358,7 @@
                 >
             </div>
 
-            <!-- Submit login details to the backend through JavaScript. -->
+            <!-- Submit the login details through JavaScript. -->
             <button class="button1-btn" type="submit">
                 Log In
             </button>
@@ -339,7 +374,7 @@
             ></p>
         </form>
 
-        <!-- Place links to signup, recovery and home below the form. -->
+        <!-- Place signup, recovery and home navigation below the form. -->
         <nav class="account-links" aria-label="Login options">
             <button
                 class="text-button"
@@ -367,7 +402,7 @@
         </nav>
     </section>
 
-    <!-- Display registration fields and their feedback messages. -->
+    <!-- Display registration fields and feedback messages. -->
     <section id="signup-screen" class="account-panel" hidden>
         <header class="panel-heading">
             <h1>Create an Account</h1>
@@ -376,7 +411,7 @@
         <!-- Collect the details needed to create an account. -->
         <form id="signup-form" class="account-form">
 
-            <!-- Place the username field at the top of the form. -->
+            <!-- Place the username at the top of the registration form. -->
             <div class="form-field">
                 <label for="signup-username">Username</label>
                 <input
@@ -402,7 +437,7 @@
                 >
             </div>
 
-            <!-- Explain password requirements below the password field. -->
+            <!-- Explain the password requirements below the field. -->
             <div class="form-field">
                 <label for="signup-password">Password</label>
                 <input
@@ -420,7 +455,7 @@
                 </p>
             </div>
 
-            <!-- Ask the user to repeat the password to avoid typing errors. -->
+            <!-- Ask the user to confirm the password before submitting. -->
             <div class="form-field">
                 <label for="signup-confirm-password">Confirm Password</label>
                 <input
@@ -469,14 +504,14 @@
         </nav>
     </section>
 
-    <!-- Keep the recovery screen ready for a later milestone. -->
+    <!-- Display the account recovery screen. -->
     <section id="recovery-screen" class="account-panel" hidden>
         <header class="panel-heading">
             <h1>Recover Your Account</h1>
             <p>Enter the email address linked to your account.</p>
         </header>
 
-        <!-- Collect an email address for the future recovery connection. -->
+        <!-- Collect the email address for account recovery. -->
         <form id="recovery-form" class="account-form">
             <div class="form-field">
                 <label for="recovery-email">Email address</label>
@@ -489,7 +524,7 @@
                 >
             </div>
 
-            <!-- Keep recovery unavailable until its backend is implemented. -->
+            <!-- Enable this button when the recovery backend is ready. -->
             <button class="button1-btn" type="submit" disabled>
                 Send Recovery Email
             </button>
@@ -519,7 +554,7 @@
         </nav>
     </section>
 
-    <!-- Load JavaScript after all page elements are available. -->
+    <!-- Load JavaScript after all screen elements are available. -->
     <script src="js/app.js"></script>
 </body>
 </html>

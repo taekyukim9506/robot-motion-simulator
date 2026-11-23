@@ -260,7 +260,7 @@ function updateAccountControls() {
 
     // Clear the previous account's displayed pose when signed out.
     if (!signedIn) {
-        updateArmPose({ roll: 0, pitch: 0, yaw: 0 });
+        resetArm();
     }
 
     userGreeting.hidden = !signedIn;
@@ -472,9 +472,6 @@ async function handleLogout() {
 loginForm.addEventListener("submit", handleLoginSubmit);
 logoutButton.addEventListener("click", handleLogout);
 
-// Share the initial session check with login and robot navigation.
-const sessionStartup = restoreLoginSession();
-
 // Store the arm form and its feedback elements.
 const armForm = document.getElementById("arm-form");
 const armMessage = document.getElementById("arm-message");
@@ -488,6 +485,17 @@ const armInputs = {
 };
 
 let armRequestInProgress = false;
+
+// Connect the movement buttons and timer to the arm panel.
+const pauseArmButton = document.getElementById("arm-pause");
+const resetArmButton = document.getElementById("arm-reset");
+const resetViewButton = document.getElementById("arm-view-reset");
+const elapsedOutput = document.getElementById("arm-elapsed");
+const totalOutput = document.getElementById("arm-total");
+
+// Keep the active movement and its next browser frame in memory.
+let armMotion = null;
+let armFrameId = null;
 
 // Display movement feedback as plain text.
 function showArmMessage(message, isSuccess = false) {
@@ -517,7 +525,10 @@ function clearArmMessage() {
 // Prevent changes and repeated submissions while saving a command.
 function setArmBusy(isBusy) {
     armRequestInProgress = isBusy;
-    armSubmitButton.disabled = isBusy;
+
+    // Wait for the current request or movement before starting another.
+    armSubmitButton.disabled = isBusy || armMotion !== null;
+    resetArmButton.disabled = isBusy;
     armSubmitButton.textContent = isBusy ? "Sending..." : "Move Arm";
     armForm.setAttribute("aria-busy", String(isBusy));
 
@@ -600,7 +611,8 @@ function handleArmSessionExpired() {
 async function handleArmSubmit(event) {
     event.preventDefault();
 
-    if (armRequestInProgress) {
+    // Accept one command at a time, including while the arm is paused.
+    if (armRequestInProgress || armMotion !== null) {
         return;
     }
 
@@ -665,8 +677,8 @@ async function handleArmSubmit(event) {
             return;
         }
 
-        // Display the values returned by the server after saving succeeds.
-        updateArmPose(result);
+        // Start moving only after the backend accepts and saves the command.
+        startArmMotion(result);
         showArmMessage("Movement accepted.", true);
     } catch (error) {
         showArmMessage(
@@ -702,6 +714,7 @@ async function showArmScene() {
 
         // Use the latest pose even if it changed while loading.
         view.setPose(currentArmPose);
+        resetViewButton.disabled = false;
         message.hidden = true;
     } catch (error) {
         // Allow another loading attempt when the screen is opened again.
@@ -721,12 +734,15 @@ function updateArmPose(movement) {
         yaw: movement.yaw
     };
 
+    // Round only the displayed text. Keep full precision for the 3D movement.
     document.getElementById("arm-current-roll").textContent =
-        String(currentArmPose.roll);
+        String(Number(currentArmPose.roll.toFixed(2)));
+
     document.getElementById("arm-current-pitch").textContent =
-        String(currentArmPose.pitch);
+        String(Number(currentArmPose.pitch.toFixed(2)));
+
     document.getElementById("arm-current-yaw").textContent =
-        String(currentArmPose.yaw);
+        String(Number(currentArmPose.yaw.toFixed(2)));
 
     if (!armScene) {
         return;
@@ -743,3 +759,159 @@ function updateArmPose(movement) {
         console.error("Unable to render the accepted arm pose:", error);
     }
 }
+
+// Start a movement from the current pose to the accepted target.
+function startArmMotion(target) {
+    const start = { ...currentArmPose };
+
+    // The axis travelling furthest sets the duration for all three axes.
+    const rollDistance = Math.abs(target.roll - start.roll);
+    const pitchDistance = Math.abs(target.pitch - start.pitch);
+    const yawDistance = Math.abs(target.yaw - start.yaw);
+    const longestDistance = Math.max(rollDistance, pitchDistance, yawDistance);
+
+    // Dividing first also supports very large yaw values of opposite signs.
+    const duration = Number.isFinite(longestDistance)
+        ? longestDistance / target.speed
+        : Math.abs(target.yaw / 2 - start.yaw / 2) / target.speed * 2;
+
+    elapsedOutput.textContent = "0.0";
+    totalOutput.textContent = Number.isFinite(duration)
+        ? duration.toFixed(1)
+        : "∞";
+
+    // An accepted command may already match the current pose.
+    if (duration === 0) {
+        updateArmPose(target);
+        return;
+    }
+
+    // Store active time separately so paused time can be left out.
+    armMotion = {
+        start,
+        target,
+        duration,
+        elapsedBeforeResume: 0,
+        resumedAt: performance.now(),
+        paused: false
+    };
+
+    pauseArmButton.disabled = false;
+    pauseArmButton.textContent = "Pause";
+    armFrameId = requestAnimationFrame(drawArmFrame);
+}
+
+// Draw the position for one moment and report whether the movement has finished.
+function displayArmAtTime(now) {
+    const motion = armMotion;
+    const activeSeconds = Math.max(0, now - motion.resumedAt) / 1000;
+    const elapsed = Math.min(
+        motion.duration,
+        motion.elapsedBeforeResume + activeSeconds
+    );
+
+    elapsedOutput.textContent = elapsed.toFixed(1);
+
+    // Use the exact target at the end to avoid a small rounding difference.
+    if (elapsed >= motion.duration) {
+        updateArmPose(motion.target);
+        stopArmPlayback();
+        return true;
+    }
+
+    // Keep the full yaw distance so 720 degrees produces two complete turns.
+    const progress = elapsed / motion.duration;
+    const pose = {};
+
+    for (const axis of ["roll", "pitch", "yaw"]) {
+        pose[axis] =
+            motion.start[axis] * (1 - progress) +
+            motion.target[axis] * progress;
+    }
+
+    updateArmPose(pose);
+    return false;
+}
+
+// Request another frame only while the arm is moving.
+function drawArmFrame(now) {
+    if (armMotion === null || armMotion.paused) {
+        return;
+    }
+
+    const finished = displayArmAtTime(now);
+
+    if (!finished) {
+        armFrameId = requestAnimationFrame(drawArmFrame);
+    }
+}
+
+// Release the controls when the movement finishes or the user resets it.
+function stopArmPlayback() {
+    if (armFrameId !== null) {
+        cancelAnimationFrame(armFrameId);
+    }
+
+    armFrameId = null;
+    armMotion = null;
+    pauseArmButton.disabled = true;
+    pauseArmButton.textContent = "Pause";
+    armSubmitButton.disabled = armRequestInProgress;
+}
+
+// Freeze the arm and timer, or continue from the same position.
+function toggleArmPause() {
+    if (armMotion === null) {
+        return;
+    }
+
+    const now = performance.now();
+
+    // Resume using a new start time so the pause is excluded.
+    if (armMotion.paused) {
+        armMotion.resumedAt = now;
+        armMotion.paused = false;
+        pauseArmButton.textContent = "Pause";
+        armFrameId = requestAnimationFrame(drawArmFrame);
+        return;
+    }
+
+    // Draw the position at the exact moment the user presses Pause.
+    cancelAnimationFrame(armFrameId);
+    armFrameId = null;
+
+    if (displayArmAtTime(now)) {
+        return;
+    }
+
+    armMotion.elapsedBeforeResume +=
+        Math.max(0, now - armMotion.resumedAt) / 1000;
+
+    armMotion.paused = true;
+    pauseArmButton.textContent = "Resume";
+}
+
+// Return the simulator to its starting pose without saving another command.
+function resetArm() {
+    stopArmPlayback();
+    updateArmPose({ roll: 0, pitch: 0, yaw: 0 });
+
+    elapsedOutput.textContent = "0.0";
+    totalOutput.textContent = "0.0";
+
+    armForm.reset();
+    clearArmMessage();
+}
+
+// Connect each button to its movement or camera action.
+pauseArmButton.addEventListener("click", toggleArmPause);
+resetArmButton.addEventListener("click", resetArm);
+
+resetViewButton.addEventListener("click", () => {
+    if (armScene) {
+        armScene.resetView();
+    }
+});
+
+// Restore the session after all controls and playback variables are ready.
+const sessionStartup = restoreLoginSession();
