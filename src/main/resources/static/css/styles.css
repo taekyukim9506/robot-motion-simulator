@@ -461,3 +461,71 @@ body {
 .arm-actions button {
     width: auto;
 }
+
+/* Place the movement form beside the grid on wider screens. */
+.mobile-workspace {
+    display: grid;
+    grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+}
+
+/* Give both parts of the mobile simulator the same card layout. */
+.mobile-controls,
+.mobile-grid-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+    padding: 24px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.mobile-controls h2,
+.mobile-grid-card h2 {
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+/* Keep the drawing in proportion when the browser width changes. */
+#mobile-grid {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: #f5f8fc;
+    border-radius: 8px;
+    cursor: grab;
+    touch-action: none;
+}
+
+/* Show when the user is dragging the grid. */
+#mobile-grid:active {
+    cursor: grabbing;
+}
+
+/* Keep the coordinate readout steady while the values change. */
+.mobile-position {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Allow the view buttons to wrap when space is limited. */
+.mobile-view-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.mobile-view-actions button {
+    width: auto;
+}
+
+/* Place the grid below the form on phones and smaller tablets. */
+@media (max-width: 800px) {
+    .mobile-workspace {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+

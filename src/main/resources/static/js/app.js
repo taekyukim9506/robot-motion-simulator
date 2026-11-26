@@ -261,6 +261,7 @@ function updateAccountControls() {
     // Clear the previous account's displayed pose when signed out.
     if (!signedIn) {
         resetArm();
+        resetMobile();
     }
 
     userGreeting.hidden = !signedIn;
@@ -912,6 +913,483 @@ resetViewButton.addEventListener("click", () => {
         armScene.resetView();
     }
 });
+
+// Connect the mobile form, position display and canvas to the simulator.
+const mobileForm = document.getElementById("mobile-form");
+const mobileMessage = document.getElementById("mobile-message");
+const mobileCanvas = document.getElementById("mobile-grid");
+const mobileContext = mobileCanvas.getContext("2d");
+const mobileMoveButton = mobileForm.querySelector('button[type="submit"]');
+const mobileCurrentX = document.getElementById("mobile-current-x");
+const mobileCurrentY = document.getElementById("mobile-current-y");
+
+const mobileInputs = {
+    x: document.getElementById("mobile-x"),
+    y: document.getElementById("mobile-y"),
+    speed: document.getElementById("mobile-speed")
+};
+
+// Store the robot position separately from the centre and scale of the view.
+let mobilePosition = { x: 0, y: 0 };
+let mobileHeading = 0;
+let mobileSteering = 0;
+let mobileHasDriven = false;
+let mobileView = { x: 0, y: 0, scale: 24 };
+let mobileDrag = null;
+let mobileFrameId = null;
+let mobileBusy = false;
+
+// Show command feedback below the movement button.
+function showMobileMessage(message, success = false) {
+    mobileMessage.textContent = message;
+    mobileMessage.classList.toggle("form-message--success", success);
+    mobileMessage.classList.toggle("form-message--error", !success);
+    mobileMessage.hidden = false;
+}
+
+// Allow one command at a time while saving or moving.
+function setMobileBusy(busy) {
+    mobileBusy = busy;
+    mobileMoveButton.disabled = busy;
+
+    for (const input of Object.values(mobileInputs)) {
+        input.disabled = busy;
+    }
+}
+
+// Draw the visible grid, coordinate axes and current robot position.
+function drawMobileGrid() {
+    if (!mobileContext) {
+        return;
+    }
+
+    const ctx = mobileContext;
+    const width = mobileCanvas.width;
+    const height = mobileCanvas.height;
+    const scale = mobileView.scale;
+
+    ctx.fillStyle = "#f5f8fc";
+    ctx.fillRect(0, 0, width, height);
+
+    // Find the first visible grid line. Work in pixels to keep the loop short.
+    const offsetX = (width / 2 - (mobileView.x % 1) * scale) % scale;
+    const offsetY = (height / 2 + (mobileView.y % 1) * scale) % scale;
+
+    ctx.beginPath();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "#d5dfe9";
+
+    for (let x = offsetX; x < width; x += scale) {
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+    }
+
+    for (let y = offsetY; y < height; y += scale) {
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+    }
+
+    ctx.stroke();
+
+    // Positive X points right. Positive Y points up on the screen.
+    const originX = width / 2 - mobileView.x * scale;
+    const originY = height / 2 + mobileView.y * scale;
+
+    ctx.beginPath();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#74869a";
+    ctx.fillStyle = "#394b60";
+    ctx.font = "14px sans-serif";
+
+    if (originY >= 0 && originY < height) {
+        ctx.moveTo(0, originY);
+        ctx.lineTo(width, originY);
+        ctx.fillText("X", width - 18, Math.max(16, originY - 6));
+    }
+
+    if (originX >= 0 && originX < width) {
+        ctx.moveTo(originX, 0);
+        ctx.lineTo(originX, height);
+        ctx.fillText("Y", Math.min(width - 16, originX + 6), 18);
+    }
+
+    ctx.stroke();
+
+        // Place the car at its grid position and turn its nose towards its heading.
+    const carX = width / 2 + (mobilePosition.x - mobileView.x) * scale;
+    const carY = height / 2 - (mobilePosition.y - mobileView.y) * scale;
+
+    if (carX >= -32 && carX <= width + 32 &&
+        carY >= -32 && carY <= height + 32) {
+        ctx.save();
+        ctx.translate(carX, carY);
+
+        // Canvas Y points down, so reverse the grid angle when drawing.
+        ctx.rotate(-mobileHeading);
+
+        // Draw four tyres. The two at the front turn with the steering.
+        for (const axle of [-12, 12]) {
+            for (const side of [-1, 1]) {
+                ctx.save();
+                ctx.translate(axle, side * 10);
+
+                if (axle > 0) {
+                    ctx.rotate(-mobileSteering);
+                }
+
+                ctx.fillStyle = "#202936";
+                ctx.fillRect(-5, -2.5, 10, 5);
+                ctx.restore();
+            }
+        }
+
+        // Draw the body between the wheels. Its front is on the right.
+        ctx.fillStyle = "#e98b26";
+        ctx.strokeStyle = "#55351e";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(-20, -8.5, 40, 17, 5);
+        ctx.fill();
+        ctx.stroke();
+
+        // Draw a dark cabin and a light windscreen near the bonnet.
+        ctx.fillStyle = "#31465a";
+        ctx.fillRect(-8, -6.5, 15, 13);
+        ctx.fillStyle = "#a9d9ef";
+        ctx.fillRect(4, -6, 4, 12);
+
+        // Headlights and rear lights make the driving direction visible.
+        ctx.fillStyle = "#fff3bf";
+        ctx.fillRect(17, -6, 3, 3);
+        ctx.fillRect(17, 3, 3, 3);
+        ctx.fillStyle = "#a72828";
+        ctx.fillRect(-20, -6, 2, 3);
+        ctx.fillRect(-20, 3, 2, 3);
+
+        ctx.restore();
+    }
+}
+
+// Use the same position for the drawing and the text below it.
+function displayMobilePosition(x, y) {
+    mobilePosition = { x, y };
+    mobileCurrentX.textContent = String(Number(x.toFixed(2)));
+    mobileCurrentY.textContent = String(Number(y.toFixed(2)));
+    drawMobileGrid();
+}
+
+// Return the robot and view to the origin when the account changes.
+function resetMobile() {
+    if (mobileFrameId !== null) {
+        cancelAnimationFrame(mobileFrameId);
+        mobileFrameId = null;
+    }
+
+    mobileDrag = null;
+    mobileHeading = 0;
+    mobileSteering = 0;
+    mobileHasDriven = false;
+    mobileView = { x: 0, y: 0, scale: 24 };
+    mobileForm.reset();
+    mobileMessage.hidden = true;
+    mobileMessage.textContent = "";
+    setMobileBusy(false);
+    displayMobilePosition(0, 0);
+}
+
+// Read the fields as numbers and explain which value needs attention.
+function readMobileCommand() {
+    const command = {};
+
+    for (const [field, input] of Object.entries(mobileInputs)) {
+        const value = input.valueAsNumber;
+
+        if (!Number.isFinite(value)) {
+            showMobileMessage(`Enter a finite number for ${field}.`);
+            input.focus();
+            return null;
+        }
+
+        command[field] = value;
+    }
+
+    if (command.speed <= 0) {
+        showMobileMessage("Speed must be greater than zero.");
+        mobileInputs.speed.focus();
+        return null;
+    }
+
+    return command;
+}
+
+// Drive to the accepted target. Keep the current heading when starting a new turn.
+function animateMobileMovement(target) {
+    const start = { ...mobilePosition };
+    const dx = target.x - start.x;
+    const dy = target.y - start.y;
+    const distance = Math.hypot(dx, dy);
+
+    // A command to the current position needs no movement.
+    if (distance === 0) {
+        setMobileBusy(false);
+        return;
+    }
+
+    if (!Number.isFinite(distance)) {
+        showMobileMessage("Command saved, but the distance is too large to display.");
+        setMobileBusy(false);
+        return;
+    }
+
+    // On the first command, face the target. Later commands start from
+    // the direction in which the car finished its previous movement.
+    const targetAngle = Math.atan2(dy, dx);
+    const initialHeading = mobileHasDriven ? mobileHeading : targetAngle;
+
+    // Reverse towards a target behind the car instead of turning on the spot.
+    const reversing = Math.cos(targetAngle - initialHeading) < -0.000001;
+    const travelAngle = initialHeading + (reversing ? Math.PI : 0);
+
+    // The middle point sets the starting direction of a gentle curved path.
+    const guide = {
+        x: start.x + Math.cos(travelAngle) * distance * 0.4,
+        y: start.y + Math.sin(travelAngle) * distance * 0.4
+    };
+
+    // Find a position on the curve between the start and the destination.
+    function pointAt(t) {
+        const u = 1 - t;
+        return {
+            x: u * u * start.x + 2 * u * t * guide.x + t * t * target.x,
+            y: u * u * start.y + 2 * u * t * guide.y + t * t * target.y
+        };
+    }
+
+    // Measure the curve in short sections so speed follows distance travelled.
+    const sections = 80;
+    const lengths = [0];
+    let previous = start;
+
+    for (let i = 1; i <= sections; i++) {
+        const point = pointAt(i / sections);
+        const step = Math.hypot(point.x - previous.x, point.y - previous.y);
+        lengths.push(lengths[i - 1] + step);
+        previous = point;
+    }
+
+    const pathLength = lengths[sections];
+    const duration = pathLength / target.speed;
+
+    if (!Number.isFinite(duration)) {
+        showMobileMessage("Command saved, but its duration is too large to display.");
+        setMobileBusy(false);
+        return;
+    }
+
+    mobileHasDriven = true;
+    mobileHeading = initialHeading;
+    const startedAt = performance.now();
+    let section = 1;
+
+    // Move along the path and turn the car to match the local direction.
+    function drawFrame(now) {
+        const elapsed = Math.max(0, now - startedAt) / 1000;
+        const finished = elapsed >= duration;
+        const travelled = finished ? pathLength : elapsed * target.speed;
+
+        while (section < sections && lengths[section] < travelled) {
+            section++;
+        }
+
+        const sectionStart = lengths[section - 1];
+        const sectionLength = lengths[section] - sectionStart;
+        const fraction = sectionLength > 0
+            ? (travelled - sectionStart) / sectionLength
+            : 0;
+        const t = finished ? 1 : (section - 1 + fraction) / sections;
+
+        // The tangent gives the direction of travel at the current position.
+        const tangentX = (1 - t) * (guide.x - start.x) + t * (target.x - guide.x);
+        const tangentY = (1 - t) * (guide.y - start.y) + t * (target.y - guide.y);
+        const direction = Math.atan2(tangentY, tangentX);
+        mobileHeading = direction + (reversing ? Math.PI : 0);
+
+        // Point the front tyres into the bend, then straighten them on arrival.
+        const bend = tangentX * (target.y - guide.y) -
+            tangentY * (target.x - guide.x);
+        const bendStrength = Math.atan2(bend, tangentX ** 2 + tangentY ** 2);
+        mobileSteering = finished ? 0 : Math.max(-0.5, Math.min(0.5,
+            reversing ? -bendStrength : bendStrength
+        ));
+
+        const point = finished ? target : pointAt(t);
+        displayMobilePosition(point.x, point.y);
+
+        if (finished) {
+            mobileFrameId = null;
+            setMobileBusy(false);
+        } else {
+            mobileFrameId = requestAnimationFrame(drawFrame);
+        }
+    }
+
+    mobileFrameId = requestAnimationFrame(drawFrame);
+}
+
+// Save the command through the backend before starting the animation.
+async function handleMobileSubmit(event) {
+    event.preventDefault();
+
+    if (mobileBusy) {
+        return;
+    }
+
+    const command = readMobileCommand();
+
+    if (!command) {
+        return;
+    }
+
+    const account = currentAccount;
+
+    if (!account) {
+        showScreen("login-screen");
+        return;
+    }
+
+    setMobileBusy(true);
+
+    try {
+        const response = await fetch("/api/mobile/move", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-Token": account.csrfToken
+            },
+            body: JSON.stringify(command)
+        });
+
+        const result = await response.json().catch(() => null);
+
+        // Ignore an old response if a different user has since signed in.
+        if (currentAccount !== account) {
+            return;
+        }
+
+        if (response.status === 401) {
+            currentAccount = null;
+            updateAccountControls();
+            loginForm.reset();
+            showScreen("login-screen");
+            showAccountFeedback(
+                loginMessage,
+                "Your session has expired. Please log in again."
+            );
+            return;
+        }
+
+        if (!response.ok) {
+                        // Show the HTTP status so a failed movement is easier to diagnose.
+            const reason = accountResponseMessage(
+                result,
+                result?.error || response.statusText || "Request failed"
+            );
+            showMobileMessage(`Movement request failed (${response.status}): ${reason}`);
+            setMobileBusy(false);
+            return;
+        }
+
+        // Animate only when the server returns a complete saved command.
+        if (!result || !Number.isInteger(result.id) || result.id <= 0 ||
+            !Number.isFinite(result.x) || !Number.isFinite(result.y) ||
+            !Number.isFinite(result.speed) || result.speed <= 0) {
+            showMobileMessage(
+                "Unexpected movement response. The command may have been saved."
+            );
+            setMobileBusy(false);
+            return;
+        }
+
+        showMobileMessage("Movement accepted.", true);
+        animateMobileMovement(result);
+    } catch (error) {
+        if (currentAccount === account) {
+            showMobileMessage("Unable to connect to the server. Please try again.");
+            setMobileBusy(false);
+        }
+    }
+}
+
+// Change the grid scale while keeping its centre in the same place.
+function zoomMobileGrid(factor) {
+    mobileView.scale = Math.min(96, Math.max(6, mobileView.scale * factor));
+    drawMobileGrid();
+}
+
+document.getElementById("mobile-zoom-in").addEventListener("click", () => {
+    zoomMobileGrid(1.5);
+});
+
+document.getElementById("mobile-zoom-out").addEventListener("click", () => {
+    zoomMobileGrid(1 / 1.5);
+});
+
+// Centre the view on the robot and keep the selected zoom level.
+document.getElementById("mobile-recenter").addEventListener("click", () => {
+    mobileView.x = mobilePosition.x;
+    mobileView.y = mobilePosition.y;
+    drawMobileGrid();
+});
+
+// Remember where the user starts dragging with a mouse, pen or finger.
+mobileCanvas.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0 || mobileDrag !== null) {
+        return;
+    }
+
+    mobileDrag = {
+        id: event.pointerId,
+        x: event.clientX,
+        y: event.clientY
+    };
+
+    mobileCanvas.setPointerCapture(event.pointerId);
+});
+
+// Convert the pointer distance to grid units, including on smaller screens.
+mobileCanvas.addEventListener("pointermove", (event) => {
+    if (!mobileDrag || mobileDrag.id !== event.pointerId) {
+        return;
+    }
+
+    const bounds = mobileCanvas.getBoundingClientRect();
+
+    if (bounds.width === 0 || bounds.height === 0) {
+        return;
+    }
+
+    const dx = (event.clientX - mobileDrag.x) * mobileCanvas.width / bounds.width;
+    const dy = (event.clientY - mobileDrag.y) * mobileCanvas.height / bounds.height;
+
+    mobileView.x -= dx / mobileView.scale;
+    mobileView.y += dy / mobileView.scale;
+    mobileDrag.x = event.clientX;
+    mobileDrag.y = event.clientY;
+
+    drawMobileGrid();
+});
+
+// Pointer capture ends when the user releases or cancels the drag.
+mobileCanvas.addEventListener("lostpointercapture", (event) => {
+    if (mobileDrag && mobileDrag.id === event.pointerId) {
+        mobileDrag = null;
+    }
+});
+
+// Connect the form and draw the starting position before opening the panel.
+mobileForm.addEventListener("submit", handleMobileSubmit);
+displayMobilePosition(0, 0);
 
 // Restore the session after all controls and playback variables are ready.
 const sessionStartup = restoreLoginSession();

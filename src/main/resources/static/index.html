@@ -316,10 +316,114 @@
             <p>Set coordinates and speed to move the robot across a grid.</p>
         </header>
 
-        <!-- Reserve space for the mobile controls and navigation grid. -->
-        <div class="panel-placeholder">
-            <h2>Mobile simulator workspace</h2>
-            <p>The movement controls and navigation grid will be added here.</p>
+        <!-- Place the movement form beside the mobile robot grid. -->
+        <div class="mobile-workspace">
+
+            <!-- Collect the target coordinates and movement speed. -->
+            <form id="mobile-form" class="mobile-controls" novalidate>
+                <h2>Movement controls</h2>
+
+                <!-- Set the horizontal target. Negative values move left of the origin. -->
+                <div class="form-field">
+                    <label for="mobile-x">Target X (grid units)</label>
+                    <input
+                        id="mobile-x"
+                        name="x"
+                        type="number"
+                        step="any"
+                        value="0"
+                        required
+                    >
+                </div>
+
+                <!-- Set the vertical target. Negative values move below the origin. -->
+                <div class="form-field">
+                    <label for="mobile-y">Target Y (grid units)</label>
+                    <input
+                        id="mobile-y"
+                        name="y"
+                        type="number"
+                        step="any"
+                        value="0"
+                        required
+                    >
+                </div>
+
+                <!-- Set how many grid units the robot travels each second. -->
+                <div class="form-field">
+                    <label for="mobile-speed">Speed (grid units/second)</label>
+                    <input
+                        id="mobile-speed"
+                        name="speed"
+                        type="number"
+                        step="any"
+                        value="2"
+                        aria-describedby="mobile-speed-help"
+                        required
+                    >
+                    <p id="mobile-speed-help" class="form-note">
+                        Enter a speed greater than zero.
+                    </p>
+                </div>
+
+                <!-- Submit the movement and show the result below the button. -->
+                <button class="button1-btn" type="submit">
+                    Move Robot
+                </button>
+
+                <p
+                    id="mobile-message"
+                    class="form-message"
+                    role="status"
+                    aria-live="polite"
+                    aria-atomic="true"
+                    hidden
+                ></p>
+            </form>
+
+            <!-- Show the robot's position and the controls for the grid view. -->
+            <div class="mobile-grid-card">
+                <h2>Robot view</h2>
+
+                <!-- JavaScript draws the grid and the robot on this canvas. -->
+                <canvas
+                    id="mobile-grid"
+                    width="600"
+                    height="360"
+                    role="img"
+                    aria-label="Mobile robot on a two-dimensional coordinate grid"
+                    aria-describedby="mobile-position"
+                >
+                    The current robot position is shown below the grid.
+                </canvas>
+
+                <!-- Display the robot's current coordinates as it moves. -->
+                <p id="mobile-position" class="mobile-position">
+                    Current position:
+                    X = <span id="mobile-current-x">0</span>,
+                    Y = <span id="mobile-current-y">0</span>
+                </p>
+
+                <!-- Change the view while keeping the robot at its current position. -->
+                <div class="mobile-view-actions">
+                    <button id="mobile-zoom-in" class="button1-btn" type="button">
+                        Zoom in
+                    </button>
+
+                    <button id="mobile-zoom-out" class="button1-btn" type="button">
+                        Zoom out
+                    </button>
+
+                    <button id="mobile-recenter" class="button1-btn" type="button">
+                        Recenter
+                    </button>
+                </div>
+
+                <p class="form-note">
+                    Drag the grid to pan. Select Recenter to bring the robot
+                    back to the centre of the view.
+                </p>
+            </div>
         </div>
     </section>
 
